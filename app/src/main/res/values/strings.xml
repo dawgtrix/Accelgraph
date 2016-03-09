@@ -5,4 +5,11 @@
 
     <string name="navigation_drawer_open">Open navigation drawer</string>
     <string name="navigation_drawer_close">Close navigation drawer</string>
+    <string name="activity_main_open_drawer">Open Drawer</string>
+    <string name="activity_main_close_drawer">Close Drawer</string>
+
+    <string-array name="drawer_titles">
+        <item>Live Graph</item>
+        <item>Saved Graph</item>
+    </string-array>
 </resources>

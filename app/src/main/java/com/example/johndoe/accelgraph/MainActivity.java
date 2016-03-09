@@ -5,13 +5,20 @@ import android.net.Uri;
 import android.os.Bundle;
 import android.support.design.widget.FloatingActionButton;
 import android.support.design.widget.Snackbar;
+import android.support.v4.app.Fragment;
+import android.support.v4.view.GravityCompat;
+import android.support.v4.widget.DrawerLayout;
+import android.support.v7.app.ActionBarDrawerToggle;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
 import android.view.View;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.widget.AbsListView;
+import android.widget.AdapterView;
+import android.widget.ArrayAdapter;
 import android.widget.LinearLayout;
+import android.widget.ListView;
 import android.widget.RelativeLayout;
 
 import com.github.mikephil.charting.charts.LineChart;
@@ -29,170 +36,71 @@ import com.google.android.gms.common.api.GoogleApiClient;
 import com.github.mikephil.charting.charts.LineChart;
 import android.os.Bundle;
 import android.support.v4.app.FragmentActivity;
-
+import android.widget.Toast;
 
 public class MainActivity extends AppCompatActivity {
 
-    private LinearLayout mainLayout;
-    private LineChart mChart;
+    private DrawerLayout mDrawerLayout;
+    private ListView mDrawerList;
+    private ActionBarDrawerToggle mDrawerToggle;
+    private String[] mDrawerHeadings;
+    private CharSequence mTitle;
 
-    /**
-     * ATTENTION: This was auto-generated to implement the App Indexing API.
-     * See https://g.co/AppIndexing/AndroidStudio for more information.
-     */
-    private GoogleApiClient client;
+    private static final int LIVE_GRAPH = 0;
+    private static final int SAVED_GRAPH = 1;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
+
+        mDrawerHeadings = getResources().getStringArray(R.array.drawer_titles);
+        mDrawerLayout = (DrawerLayout) findViewById(R.id.drawer_layout);
+        mDrawerList = (ListView) findViewById(R.id.left_drawer);
+
+        // set a custom shadow that overlays the main content when the drawer opens
+        mDrawerLayout.setDrawerShadow(R.drawable.drawer_shadow, GravityCompat.START);
+        // set up the drawer's list view with items and click listener
+        mDrawerList.setAdapter(new ArrayAdapter<>(this,
+                R.layout.drawer_list_item, mDrawerHeadings));
+        mDrawerList.setOnItemClickListener(new DrawerItemClickListener());
+
         Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
 
-        FloatingActionButton fab = (FloatingActionButton) findViewById(R.id.fab);
-        fab.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                Snackbar.make(view, "Replace with your own action", Snackbar.LENGTH_LONG)
-                        .setAction("Action", null).show();
-            }
-        });
+//        FloatingActionButton fab = (FloatingActionButton) findViewById(R.id.);
+//        fab.setOnClickListener(new View.OnClickListener() {
+//            @Override
+//            public void onClick(View view) {
+//                Snackbar.make(view, "Replace with your own action", Snackbar.LENGTH_LONG)
+//                        .setAction("Action", null).show();
+//            }
+//        });
 
-        mainLayout = (LinearLayout) findViewById(R.id.mainLayout);
-        //create line chart
-        mChart = new LineChart(this);
-        //add to chart layout
-//        mainLayout.addView(mChart);
-        mainLayout.addView(mChart, new AbsListView.LayoutParams
-                (AbsListView.LayoutParams.MATCH_PARENT, AbsListView.LayoutParams.MATCH_PARENT));
+        // enable ActionBar app icon to behave as action to toggle nav drawer
+        getSupportActionBar().setDisplayHomeAsUpEnabled(true);
+        getSupportActionBar().setHomeButtonEnabled(true);
 
-        //customise line chart
-        mChart.setDescription("");
-        mChart.setNoDataTextDescription("No data for the mo");
+        // ActionBarDrawerToggle ties together the the proper interactions
+        // between the sliding drawer and the action bar app icon
+        mDrawerToggle = new ActionBarDrawerToggle(
+                this,                                 /* host Activity */
+                mDrawerLayout,                        /* DrawerLayout object */
+                toolbar,                              /* Toolbar object */
+                R.string.activity_main_open_drawer,   /* "open drawer" description for accessibility */
+                R.string.activity_main_close_drawer  /* "close drawer" description for accessibility */
+        ) {
+            public void onDrawerClosed(View view) {
 
-        //enable values highlighting
-        mChart.setHighlightPerDragEnabled(true);
-        //mChart.setHighlightEnabled(true);
-
-        //enable touch gesture
-        mChart.setTouchEnabled(true);
-
-        //enable scaling and dragging
-        mChart.setDragEnabled(true);
-        mChart.setScaleEnabled(true);
-        mChart.setDrawGridBackground(false);
-
-        //enable pinch zoom to prevent scaling only X or Y
-        mChart.setPinchZoom(true);
-
-        //alternative background colour
-        mChart.setBackgroundColor(Color.LTGRAY);
-
-        //now work on data
-        LineData data = new LineData();
-        data.setValueTextColor(Color.WHITE);
-
-        //add data to line chart
-        mChart.setData(data);
-
-        //get legend object
-        Legend l = mChart.getLegend();
-
-        //customise legend
-        l.setForm(Legend.LegendForm.LINE);
-        l.setTextColor(Color.WHITE);
-
-        XAxis xl = mChart.getXAxis();
-        xl.setTextColor(Color.WHITE);
-        xl.setDrawGridLines(false);
-        xl.setAvoidFirstLastClipping(true);
-
-        YAxis y1 = mChart.getAxisLeft();
-        y1.setTextColor(Color.WHITE);
-        y1.setAxisMaxValue(120f);
-        y1.setDrawGridLines(true);
-
-        YAxis yl2 = mChart.getAxisRight();
-        yl2.setEnabled(false);
-
-
-        // ATTENTION: This was auto-generated to implement the App Indexing API.
-        // See https://g.co/AppIndexing/AndroidStudio for more information.
-        client = new GoogleApiClient.Builder(this).addApi(AppIndex.API).build();
-    }
-
-    //we need to create method to add entry to the line chart
-    private void addEntry () {
-        LineData data = mChart.getData();
-
-        if (data != null){
-            LineDataSet set = data.getDataSetByIndex(0);
-
-            if (set == null) {
-                //creation if null
-                set = createSet();
-                data.addDataSet(set);
             }
 
-            //add a new random value
-            data.addXValue("");
-            data.addEntry(new Entry((float)(Math.random() * 75) + 60f, set.getEntryCount()), 0);
+            public void onDrawerOpened(View drawerView) {
 
-            //enable the way chart knows when its data has changed
-            mChart.notifyDataSetChanged();
-
-            //limit number of visible entries
-            mChart.setVisibleXRangeMaximum(20);
-
-            //Scroll to the last entry
-            mChart.moveViewToX(data.getXValCount() - 7);
             }
-    }
+        };
+        mDrawerLayout.setDrawerListener(mDrawerToggle);
 
-    protected void onResume() {
-        super.onResume();
-        //simulate real time data addition
 
-        new Thread(new Runnable(){
-            @Override
-        public void run(){
-                //add 100 entries
-                for (int i=0; i<100; i++){
-                    runOnUiThread(new Runnable() {
-                        @Override
-                        public void run() {
-                            addEntry(); //chart is notified of update in addEntry method
-                        }
-                    });
-
-                    //pause between adds
-                    try {
-                        Thread.sleep(600);
-                    } catch (InterruptedException e){
-                        //manage error...
-                    }
-                }
-            }
-        }).start();
-    }
-
-    //method to create set
-    private LineDataSet createSet() {
-        LineDataSet set = new LineDataSet (null, "SPL Db");
-        set.setDrawCubic(true);
-        set.setCubicIntensity(0.2f);
-        set.setAxisDependency(YAxis.AxisDependency.LEFT);
-        set.setColor(ColorTemplate.getHoloBlue());
-        set.setCircleColor(ColorTemplate.getHoloBlue());
-        set.setLineWidth(2f);
-        set.setCircleSize(4f);
-        set.setFillAlpha(65);
-        set.setFillColor(ColorTemplate.getHoloBlue());
-        set.setHighLightColor(Color.rgb(244, 177, 177));
-        set.setValueTextColor(Color.WHITE);
-        set.setValueTextSize(10f);
-
-        return set;
     }
 
     @Override
@@ -217,43 +125,30 @@ public class MainActivity extends AppCompatActivity {
         return super.onOptionsItemSelected(item);
     }
 
-    @Override
-    public void onStart() {
-        super.onStart();
+    private void navigateTo(int position) {
+        Fragment fragment;
 
-        // ATTENTION: This was auto-generated to implement the App Indexing API.
-        // See https://g.co/AppIndexing/AndroidStudio for more information.
-        client.connect();
-        Action viewAction = Action.newAction(
-                Action.TYPE_VIEW, // TODO: choose an action type.
-                "Main Page", // TODO: Define a title for the content shown.
-                // TODO: If you have web page content that matches this app activity's content,
-                // make sure this auto-generated web page URL is correct.
-                // Otherwise, set the URL to null.
-                Uri.parse("http://host/path"),
-                // TODO: Make sure this auto-generated app deep link URI is correct.
-                Uri.parse("android-app://com.example.johndoe.accelgraph/http/host/path")
-        );
-        AppIndex.AppIndexApi.start(client, viewAction);
+        switch(position) {
+            case LIVE_GRAPH:
+                //This is how you start a fragment and push it to the screen
+                fragment = new LiveGraphFragment();
+                getSupportFragmentManager().beginTransaction().replace(R.id.content_frame, fragment).commit();
+                break;
+            case SAVED_GRAPH:
+                break;
+            default:
+                break;
+        }
+
+        mDrawerList.setItemChecked(position, true);
+        setTitle(mDrawerHeadings[position]);
+        mDrawerLayout.closeDrawer(mDrawerList);
     }
 
-    @Override
-    public void onStop() {
-        super.onStop();
-
-        // ATTENTION: This was auto-generated to implement the App Indexing API.
-        // See https://g.co/AppIndexing/AndroidStudio for more information.
-        Action viewAction = Action.newAction(
-                Action.TYPE_VIEW, // TODO: choose an action type.
-                "Main Page", // TODO: Define a title for the content shown.
-                // TODO: If you have web page content that matches this app activity's content,
-                // make sure this auto-generated web page URL is correct.
-                // Otherwise, set the URL to null.
-                Uri.parse("http://host/path"),
-                // TODO: Make sure this auto-generated app deep link URI is correct.
-                Uri.parse("android-app://com.example.johndoe.accelgraph/http/host/path")
-        );
-        AppIndex.AppIndexApi.end(client, viewAction);
-        client.disconnect();
+    private class DrawerItemClickListener implements ListView.OnItemClickListener {
+        @Override
+        public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
+            navigateTo(position);
+        }
     }
 }
