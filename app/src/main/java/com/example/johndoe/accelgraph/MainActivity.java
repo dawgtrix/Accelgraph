@@ -135,6 +135,8 @@ public class MainActivity extends AppCompatActivity {
                 getSupportFragmentManager().beginTransaction().replace(R.id.content_frame, fragment).commit();
                 break;
             case SAVED_GRAPH:
+                fragment = new SavedGraphFragment();
+                getSupportFragmentManager().beginTransaction().replace(R.id.content_frame, fragment).commit();
                 break;
             default:
                 break;
