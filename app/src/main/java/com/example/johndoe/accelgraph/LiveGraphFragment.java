@@ -1,10 +1,14 @@
 package com.example.johndoe.accelgraph;
 
+import android.content.Context;
 import android.graphics.Color;
+import android.hardware.Sensor;
+import android.hardware.SensorManager;
 import android.net.Uri;
 import android.os.Bundle;
 import android.support.annotation.Nullable;
 import android.support.v4.app.Fragment;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuInflater;
@@ -23,15 +27,28 @@ import com.github.mikephil.charting.utils.ColorTemplate;
 import com.google.android.gms.appindexing.Action;
 import com.google.android.gms.appindexing.AppIndex;
 import com.google.android.gms.common.api.GoogleApiClient;
+import android.hardware.SensorEventListener;
+import android.hardware.Sensor;
+import android.hardware.SensorEvent;
+import android.hardware.SensorManager;
 
 /**
  * Created by John Doe on 09/03/2016.
  */
-public class LiveGraphFragment extends Fragment {
+public class LiveGraphFragment extends Fragment implements SensorEventListener {
 
     private GoogleApiClient client;
     private RelativeLayout mainLayout;
     private LineChart mChart;
+
+    private SensorManager senSensorManager;
+    private Sensor senAccelerometer;
+
+    private long lastUpdate = 0;
+    private float last_x, last_y, last_z;
+    private static final int SHAKE_THRESHOLD = 600;
+
+
 
     @Nullable
     @Override
@@ -42,6 +59,14 @@ public class LiveGraphFragment extends Fragment {
     @Override
     public void onActivityCreated(@Nullable Bundle savedInstanceState) {
         super.onActivityCreated(savedInstanceState);
+        //super.onCreate(savedInstanceState);
+
+        senSensorManager = (SensorManager) getActivity().getSystemService(Context.SENSOR_SERVICE);
+        Log.i("LiveGraphFragment", "Is senSensorManager null? " + senSensorManager);
+        senAccelerometer = senSensorManager.getDefaultSensor(Sensor.TYPE_ACCELEROMETER);
+        senSensorManager.registerListener(this, senAccelerometer , SensorManager.SENSOR_DELAY_NORMAL);
+
+
 
         configureGraph();
     }
@@ -111,6 +136,21 @@ public class LiveGraphFragment extends Fragment {
         client = new GoogleApiClient.Builder(getActivity()).addApi(AppIndex.API).build();
     }
 
+    //////////////////////////
+
+    @Override
+    public void onSensorChanged(SensorEvent event) {
+
+    }
+
+    @Override
+    public void onAccuracyChanged(Sensor sensor, int accuracy) {
+
+    }
+
+
+    /////////////////////
+
     private void addEntry () {
         LineData data = mChart.getData();
 
@@ -159,7 +199,14 @@ public class LiveGraphFragment extends Fragment {
     @Override
     public void onResume() {
         super.onResume();
-        //simulate real time data addition
+
+        senSensorManager.registerListener(this, senAccelerometer, SensorManager.SENSOR_DELAY_NORMAL);
+
+
+
+
+
+       /* //simulate real time data addition
 
         new Thread(new Runnable(){
             @Override
@@ -181,10 +228,16 @@ public class LiveGraphFragment extends Fragment {
                     }
                 }
             }
-        }).start();
+        }).start();*/
     }
 
     @Override
+    public void onPause() {
+        super.onPause();
+        senSensorManager.unregisterListener(this);
+    }
+
+/*    @Override
     public void onStart() {
         super.onStart();
 
@@ -202,9 +255,9 @@ public class LiveGraphFragment extends Fragment {
                 Uri.parse("android-app://com.example.johndoe.accelgraph/http/host/path")
         );
         AppIndex.AppIndexApi.start(client, viewAction);
-    }
+    }*/
 
-    @Override
+/*    @Override
     public void onStop() {
         super.onStop();
 
@@ -222,6 +275,32 @@ public class LiveGraphFragment extends Fragment {
         );
         AppIndex.AppIndexApi.end(client, viewAction);
         client.disconnect();
-    }
+    }*/
 
+    public void onSensorChange(SensorEvent sensorEvent) {
+        Sensor mySensor = sensorEvent.sensor;
+
+        if (mySensor.getType() == Sensor.TYPE_ACCELEROMETER) {
+            float x = sensorEvent.values[0];
+            float y = sensorEvent.values[1];
+            float z = sensorEvent.values[2];
+
+            long curTime = System.currentTimeMillis();
+
+            if ((curTime - lastUpdate) > 100) {
+                long diffTime = (curTime - lastUpdate);
+                lastUpdate = curTime;
+
+                float speed = Math.abs(x + y + z - last_x - last_y - last_z) / diffTime * 10000;
+
+                if (speed > SHAKE_THRESHOLD) {
+
+                }
+
+                last_x = x;
+                last_y = y;
+                last_z = z;
+            }
+        }
+    }
 }
